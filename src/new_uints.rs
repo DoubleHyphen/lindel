@@ -461,7 +461,10 @@ macro_rules! create_lineariseable_data_type {
 
 #[cfg(test)]
 mod tests {
-    const TOTAL_BITS_USED: usize = 20;
+    #[cfg(debug_assertions)]
+    const TOTAL_BITS_USED: usize = 10;
+    #[cfg(not(debug_assertions))]
+    const TOTAL_BITS_USED: usize = 19;
     
     macro_rules! check_vals {
         ($coor: ty, $dims: expr) => {

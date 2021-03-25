@@ -104,6 +104,8 @@
 
 // If you can read this, it must mean that you're looking into the source code instead of reading the documentation. Thus, it needs to be acknowledged: _Yes_, I did basically copy-paste the functions from here to the `nalgebra_points` and `new_uints` modules. No, with how immature const generics are still, I'm not liable to change it any time soon. I do accept merge requests, however!
 
+#![cfg_attr(all(not(feature = "nalg"), not(test)), no_std)]
+
 pub mod new_uints;
 pub use morton_encoding::{morton_encode, morton_decode, IdealKey, ValidKey};
 pub mod compact_encoding;
@@ -134,14 +136,14 @@ where
         + PrimInt
         + BitOrAssign
         + BitAndAssign
-        + std::ops::BitXorAssign,
+        + core::ops::BitXorAssign,
     <N as IdealKey<D>>::Key:
         PrimInt 
         + From<N> 
         + BitOrAssign 
         + BitAndAssign 
         + ShlAssign<usize> 
-        + std::ops::BitXorAssign,
+        + core::ops::BitXorAssign,
 {
     /// A thin wrapper around the [`morton_encode`](fn@morton_encode) function.
     fn z_index(&self) -> <N as IdealKey<D>>::Key {
@@ -158,7 +160,7 @@ where
     fn hilbert_index(&self) -> <N as IdealKey<D>>::Key {
     
         let inverse_gray_encoding = |mut x| -> <N as IdealKey<D>>::Key {
-            let log_bits: u32 = (std::mem::size_of::<<N as IdealKey<D>>::Key>() * 8)
+            let log_bits: u32 = (core::mem::size_of::<<N as IdealKey<D>>::Key>() * 8)
                 .next_power_of_two()
                 .trailing_zeros();
             let powers_of_two = (0..log_bits).map(|i| 1<<i);
@@ -168,7 +170,7 @@ where
             x
         };
         
-        let bits: usize = std::mem::size_of::<N>() * 8;
+        let bits: usize = core::mem::size_of::<N>() * 8;
         let min_leading_zeros =
             self.iter().fold(N::zero(), |a, &b| a | b).leading_zeros() as usize;
         if min_leading_zeros == bits {
@@ -227,11 +229,11 @@ where
     /// ```
     /// 
     fn from_hilbert_index(input: <N as IdealKey<D>>::Key) -> Self {
-        let coor_bits = std::mem::size_of::<N>() * 8;
+        let coor_bits = core::mem::size_of::<N>() * 8;
         let dims = D;
         let mut min_leading_zeros = input.leading_zeros() as usize;
         
-        let key_bits = std::mem::size_of::<<N as IdealKey<D>>::Key>() * 8;
+        let key_bits = core::mem::size_of::<<N as IdealKey<D>>::Key>() * 8;
         let useless_bits = key_bits - (dims * coor_bits);
         min_leading_zeros -= useless_bits;
         
@@ -334,7 +336,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    const TOTAL_BITS_USED: usize = 20;
+    #[cfg(debug_assertions)]
+    const TOTAL_BITS_USED: usize = 10;
+    #[cfg(not(debug_assertions))]
+    const TOTAL_BITS_USED: usize = 25;
     
     /// This function ought to be capable of checking a Hilbert encoding function as a black box, by solely examining its properties.
     /// Said properties are:
@@ -352,6 +357,8 @@ mod tests {
                 }
                 x.iter().zip(y.iter()).map(abs_diff).sum::<$coor>() == 1
             }
+            
+            const COOR_BITS: usize = core::mem::size_of::<$coor>() * 8;
         
             fn amt_of_bits_differing(x: Set, y: Set) -> usize {
                 let same_bits = x.iter()
@@ -360,22 +367,51 @@ mod tests {
                     .map(<$coor>::leading_zeros)
                     .min()
                     .unwrap_or(0) as usize;
-                std::mem::size_of::<$coor>() * 8 - same_bits
+                COOR_BITS - same_bits
             }
             
-            let half_the_bits = TOTAL_BITS_USED>>1;
-            let rest_of_bits = TOTAL_BITS_USED - half_the_bits;
-
-            for _ in 0..(1<<half_the_bits) {
-                let mut beginning = rand::random::<Key>();
-                if (!($dims as u8).is_power_of_two()) {
-                    beginning &= ((1<<($dims * std::mem::size_of::<$coor>() * 8)) - 1);
-                }
-                let beginning = beginning;
-                let first_sample = <[$coor; $dims]>::from_hilbert_index(beginning);
+            
+            if TOTAL_BITS_USED < (COOR_BITS * $dims) {
+                let half_the_bits = TOTAL_BITS_USED>>1;
+                let rest_of_bits = TOTAL_BITS_USED - half_the_bits;
+                let key_one = 1 as Key;
                 
-                let key_iter = (0..(1<<rest_of_bits))
-                    .filter_map(|x| beginning.checked_add(x))
+                let useful_bit_mask: Key = key_one
+                    .checked_shl($dims * COOR_BITS as u32)
+                    .unwrap_or(0)
+                    .wrapping_sub(key_one);
+
+                for _ in 0..(1<<half_the_bits) {
+                    let beginning = rand::random::<Key>() & useful_bit_mask;
+                    let first_sample = <[$coor; $dims]>::from_hilbert_index(beginning);
+                    
+                    
+                    let key_iter = (0..(1<<rest_of_bits))
+                        .filter_map(|x| beginning.checked_add(x))
+                        .take_while(|&x| x <= useful_bit_mask) 
+                        .map(|x| (x, <[$coor; $dims]>::from_hilbert_index(x)));
+                    let key_iter_2 = key_iter.clone().skip(1);
+                    let keys_iter = key_iter.zip(key_iter_2);
+                    
+                    for ((key_1, sample_1), (key_2, sample_2)) in keys_iter {
+                        assert_eq!(key_1, sample_1.hilbert_index()); // Reversibility
+                        assert!(are_adjacent(sample_1, sample_2)); // Adjacency
+                        
+                        let diff_bits = amt_of_bits_differing(sample_2, first_sample);
+                        if diff_bits < COOR_BITS {
+                            let max_difference = (1 as Key) << ($dims * diff_bits);
+                            assert!(key_2 - beginning < max_difference);
+                            // Locality
+                        }
+                    }
+                }
+            } else {
+                let max_value = (1 as Key)
+                    .checked_shl(COOR_BITS as u32 * $dims)
+                    .unwrap_or(0)
+                    .wrapping_sub(1);
+                
+                let key_iter = (0..=max_value)
                     .map(|x| (x, <[$coor; $dims]>::from_hilbert_index(x)));
                 let key_iter_2 = key_iter.clone().skip(1);
                 let keys_iter = key_iter.zip(key_iter_2);
@@ -384,10 +420,10 @@ mod tests {
                     assert_eq!(key_1, sample_1.hilbert_index()); // Reversibility
                     assert!(are_adjacent(sample_1, sample_2)); // Adjacency
                     
-                    let diff_bits = amt_of_bits_differing(sample_2, first_sample);
-                    if diff_bits < std::mem::size_of::<$coor>() * 8 {
+                    let diff_bits = amt_of_bits_differing(sample_2, [0; $dims]);
+                    if diff_bits < COOR_BITS {
                         let max_difference = (1 as Key) << ($dims * diff_bits);
-                        assert!(key_2 - beginning < max_difference);
+                        assert!(key_2 < max_difference);
                         // Locality
                     }
                 }
