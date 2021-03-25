@@ -1,5 +1,5 @@
 //! Implementation of [Compact Hilbert Indices](https://dl.acm.org/doi/10.1109/CISIS.2007.16) by
-//! Chris Hamilton, and of Compact Z-indices by the crate maintainer.
+//! Chris Hamilton, and (in the near future) of Compact Z-indices by the crate maintainer.
 
 /// Right rotation of x by b bits out of n.
 fn rotate_right(x: usize, b: u32, n: u32) -> usize {

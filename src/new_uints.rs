@@ -1,3 +1,26 @@
+//! A macro that creates a new `[usize; N]` data-type that behaves as an integer for the purposes of accepting a new `Key`.
+//! 
+//! The `create_lineariseable_data_type` macro accepts three arguments:
+//! 1. The coordinate data-type, an unsigned integer
+//! 2. The amount of dimensions that the data-set must have
+//! 3. A name for the new data-type that will function as the key. (Must be provided by the user.)
+//! 
+//! We haven't yet tried whether it can accept the new data-types it output as input coordinates; `u128`s were considered enough as a limit.
+//! 
+//! # Example usage:
+//! ```rust
+//! lindel::create_lineariseable_data_type!(u128, 33, NewKey);
+//! let input = [870u128; 33];
+//! let hind = NewKey::hilbert_index(input);
+//! let zind = NewKey::z_index(input);
+//! let reinstated_input = hind.from_hilbert_index();
+//! assert_eq!(input, reinstated_input);
+//! let reinstated_input = NewKey::from_z_index(zind);
+//! assert_eq!(input, reinstated_input);
+//! ```
+//! 
+//! # Note
+//! Please bear in mind that the new data-type has only implemented whichever methods and operators were strictly necessary for its operation as a Key; for instance, only wrapping addition is implemented, and subtraction is lacking entirely.
 #[macro_export]
 macro_rules! create_lineariseable_data_type {
     ($coor: ty, $dim: expr, $key: ident) => {

@@ -1,8 +1,17 @@
+//! A few traits and functions for linearising `nalgebra`'s `Point` data-types.
+//! 
+//! For people who've understood the functions in the main library, there's absolutely nothing new here. The only difference is that, rather than implementing each function in both method and function ways, each function is only implemented method-style (for the encoding) or associated-function style (for the decoding). Please refer to the examples mentioned in the [`Lineariseable`](Lineariseable) trait or the `README` file.
 use morton_encoding::{bloat_custom_checked, shrink_custom_checked, nz};
 use nalgebra::*;
 use std::ops::{BitAndAssign, BitOrAssign, ShlAssign};
 use num::PrimInt;
 use num_traits::Zero;
+
+
+/// Given a data type and a type-number, it yields the smallest unsigned
+/// integer that's at least `N` times larger.
+/// 
+/// Implemented by brute force.
 
 pub trait IdealKey<N> {
     type Key;
@@ -129,6 +138,13 @@ where
         + std::ops::BitXorAssign,
     DefaultAllocator: nalgebra::allocator::Allocator<N, D>,
 {
+    /// The 'Point' analogue for the primitive types' [`z_index`](Lineariseable::z_index) method.
+    /// # Examples
+    /// ```rust
+    /// use lindel::Lineariseable;
+    /// let pnt = nalgebra::Point4::<u32>::new(51, 32, 65565, 10101010);
+    /// assert_eq!(pnt.z_index(), 4953044972870758573802201754);
+    /// ```
     fn z_index(&self) -> <N as IdealKey<D>>::Key {
         self.iter()
             .map(|&m| {
@@ -138,6 +154,13 @@ where
             .fold(<N as IdealKey<D>>::Key::zero(), |acc, x| (acc << 1) | x)
     }
     
+    /// The 'Point' analogue for the primitive types' [`hilbert_index`](Lineariseable::hilbert_index) method.
+    /// # Examples
+    /// ```rust
+    /// use lindel::Lineariseable;
+    /// let pnt = nalgebra::Point4::<u32>::new(51, 32, 65565, 10101010);
+    /// assert_eq!(pnt.hilbert_index(), 4961111386034627444566496746);
+    /// ```
     fn hilbert_index(&self) -> <N as IdealKey<D>>::Key {
     
         let inverse_gray_encoding = |mut x| -> <N as IdealKey<D>>::Key {
@@ -191,6 +214,17 @@ where
         inverse_gray_encoding(input.z_index())
     }
     
+    
+    /// The 'Point' analogue for the primitive types' [`z_index`](Lineariseable::from_z_index) method.
+    /// # Examples
+    /// ```rust
+    /// use lindel::Lineariseable;
+    /// type Pnt = nalgebra::Point4::<u32>;
+    /// let pnt = Pnt::new(51, 32, 65565, 10101010);
+    /// let z_ind = pnt.z_index();
+    /// let pnt_again = Pnt::from_z_index(z_ind);
+    /// assert_eq!(pnt, pnt_again);
+    /// ```
     fn from_z_index(input: <N as IdealKey<D>>::Key) -> Self {
         let size_ratio = <D as DimName>::dim();
         let mut result = Self::origin();
@@ -204,6 +238,17 @@ where
         result
     }
     
+    
+    /// The 'Point' analogue for the primitive types' [`hilbert_index`](Lineariseable::from_hilbert_index) method.
+    /// # Examples
+    /// ```rust
+    /// use lindel::Lineariseable;
+    /// type Pnt = nalgebra::Point4::<u32>;
+    /// let pnt = Pnt::new(51, 32, 65565, 10101010);
+    /// let h_ind = pnt.hilbert_index();
+    /// let pnt_again = Pnt::from_hilbert_index(h_ind);
+    /// assert_eq!(pnt, pnt_again);
+    /// ```    
     fn from_hilbert_index(input: <N as IdealKey<D>>::Key) -> Self {
         let coor_bits = std::mem::size_of::<N>() * 8;
         let dims = <D as DimName>::dim();

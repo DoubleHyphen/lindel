@@ -9,14 +9,14 @@ This crate is an extension of the `morton-encoding` crate.
 If it is not necessary to use `lindel` with `nalgebra`, it is sufficient to insert the line
 
 ```toml
-lindel = "1.0"
+lindel = "0.1"
 ```
 
 under the `[dependencies]` section. Otherwise, the following section must be inserted to the project's `Cargo.toml` file:
 
 ```toml
 [dependencies.lindel]
-version = "1.0"
+version = "0.1"
 features = ["nalgebra"]
 ```
 

@@ -1,8 +1,16 @@
 [package]
 name = "lindel"
 version = "0.1.0"
-authors = ["froderick <jnikolaides@toolsonair.com>"]
+authors = ["froderick <velona@ahiru.eu>"]
 edition = "2018"
+description = "A crate for Hilbert and Morton encoding and decoding; in a word, linearising and delinearising."
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+keywords = ["Z-order", "fractal", "curve", "Morton", "Hilbert"]
+categories = ["algorithms"]
+homepage = "https://github.com/DoubleHyphen/lindel"
+documentation = "https://docs.rs/lindel/"
+repository = "https://github.com/DoubleHyphen/lindel"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,12 +18,12 @@ edition = "2018"
 all-features = true
 
 [dependencies]
-num = {version = "*"}
-num-traits = {version = "*"}
-nalgebra = {version = "*", optional = true}
+num = {version = "0.2"}
+num-traits = {version = "0.2"}
+nalgebra = {version = "0.25", optional = true}
 
 [dev-dependencies]
-rand = "*"
+rand = "0.8"
 
 [dependencies.morton-encoding]
 version = "^2"
