@@ -59,7 +59,7 @@
 //! 3. Seeing as we've already implemented `morton_encoding`, we leverage it to perform what mr Chernoch calls “transposition” and what mr Skilling doesn't even deign to mention is necessary.
 #![cfg_attr(
     feature = "nalg",
-    doc = "4. Given that the [`nalgebra`](nalgebra) crate exists, we opted to just implement this crate's linearisation methods for `nalgebra`'s [`Point`](nalgebra::Point) data-types rather than re-implement them as mr Chernoch already did, so as to avail ourselves of `nalgebra`'s static correctness and sheer performance."
+    doc = "4. Given that the [`nalgebra`](nalgebra) crate exists, we opted to just implement this crate's linearisation methods for its [`Point`](nalgebra::Point) data-types rather than re-implement them as mr Chernoch already did, so as to avail ourselves of its static correctness and sheer performance."
 )]
 //! 
 //! 
@@ -92,12 +92,11 @@
     not(feature = "nalg"),
     doc = "However, the crate (or its documentation, in any event) has not currently been compiled with the `nalg` feature enabled, so it can't offer this functionality."
 )]
-
 //!
 //! # Compact Hilbert encoding
 //! Implemented by Chris Hamilton and copied with permission and gratitude into our own code. Information on implementation details and performance characteristics will have to wait until mr Hamilton can explain as much.
 //!
-//!
+//! 
 //!
 //!
 //!
