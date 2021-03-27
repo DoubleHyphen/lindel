@@ -82,6 +82,7 @@
 //! assert_eq!(sample_2.hilbert_index(), 110);
 //! assert_ne!(sample_1.hilbert_index() as u64, sample_2.hilbert_index());
 //! ```
+//! Because the amount of dimensions is not a power of two, adding more bits via a promotion to a larger coordinate data-type inserts leading zeros that end up being taken into account, thereby leading to a different key at the end!
 //! 
 //! # Nalgebra
 //! Hidden behind the `nalg` feature, so as to avoid dragging unnecessary dependencies to people who don't need them, is the 
