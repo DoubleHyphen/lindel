@@ -73,6 +73,16 @@
 //! 
 //! Our solution, on the other hand, can accept coordinates as small as `u8`s. As a result, any data-set which is statically known to contain small enough numbers can simply be modelled with a smaller coordinate data-type, solving the biggest part of this problem in one fell swoop. Nonetheless, we also examine the leading zeros of our coordinates, and skip any leading zeros that come in groups of `D`, where `D` the amount of dimensions; this outputs the exact same results as one would get by examining all bits from the beginning, and allows us to avoid taking the amount of bits as a parametre. Nonetheless, we admittedly haven't benchmarked the cost of zero-counting to compare it to the other costs, because such micro-optimisations were deemed beyond the scope of this crate.
 //! 
+//! That said, while it is highly improbable that this quirk might come up in production code, it's not entirely impossible! Take, for instance, the following example:
+//! ```rust
+//! # use lindel::*;
+//! let sample_1: [ u8; 3] = [3, 7, 2];
+//! let sample_2: [u16; 3] = [3, 7, 2];
+//! assert_eq!(sample_1.hilbert_index(), 456);
+//! assert_eq!(sample_2.hilbert_index(), 110);
+//! assert_ne!(sample_1.hilbert_index() as u64, sample_2.hilbert_index());
+//! ```
+//! 
 //! # Nalgebra
 //! Hidden behind the `nalg` feature, so as to avoid dragging unnecessary dependencies to people who don't need them, is the 
 #![cfg_attr(
