@@ -296,7 +296,7 @@ mod tests {
     macro_rules! check_vals {
         ($coor: ty, $dims: ty) => {
             type Set = Point<$coor, $dims>;
-            type Key = Self;
+            type Key = <$coor as IdealKey<$dims>>::Key;
 
             fn are_adjacent(x: Set, y: Set) -> bool {
                 fn abs_diff((a, b): (&$coor, &$coor)) -> $coor {

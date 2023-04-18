@@ -135,7 +135,7 @@ pub trait Lineariseable<Key> {
 impl<N, const D: usize> Lineariseable<<N as IdealKey<D>>::Key> for [N; D]
 where
     N: IdealKey<D>,
-    N: ToPrimitive + Copy + PrimInt + BitOrAssign + BitAndAssign + core::ops::BitXorAssign,
+    N: ToPrimitive + PrimInt + BitOrAssign + BitAndAssign + core::ops::BitXorAssign,
     <N as IdealKey<D>>::Key:
         PrimInt + From<N> + BitOrAssign + BitAndAssign + ShlAssign<usize> + core::ops::BitXorAssign,
 {
