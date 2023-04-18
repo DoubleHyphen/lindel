@@ -1,12 +1,12 @@
 //! A macro that creates a new `[usize; N]` data-type that behaves as an integer for the purposes of accepting a new `Key`.
-//! 
+//!
 //! The `create_lineariseable_data_type` macro accepts three arguments:
 //! 1. The coordinate data-type, an unsigned integer
 //! 2. The amount of dimensions that the data-set must have
 //! 3. A name for the new data-type that will function as the key. (Must be provided by the user.)
-//! 
+//!
 //! We haven't yet tried whether it can accept the new data-types it output as input coordinates; `u128`s were considered enough as a limit.
-//! 
+//!
 //! # Example usage:
 //! ```rust
 //! lindel::create_lineariseable_data_type!(u128, 33, NewKey);
@@ -18,7 +18,7 @@
 //! let reinstated_input = NewKey::from_z_index(zind);
 //! assert_eq!(input, reinstated_input);
 //! ```
-//! 
+//!
 //! # Note
 //! Please bear in mind that the new data-type has only implemented whichever methods and operators were strictly necessary for its operation as a Key; for instance, only wrapping addition is implemented, and subtraction is lacking entirely.
 #[macro_export]
@@ -132,11 +132,12 @@ macro_rules! create_lineariseable_data_type {
                     Ok((x.0[0] & mask).try_into().unwrap())
                 } else {
                     let mut result: $coor = 0usize.try_into().unwrap();
-                    let amt_of_usizes_in_a_coor = ($key::COOR_BYTES + $key::USIZE_BYTES - 1) / $key::USIZE_BYTES;
+                    let amt_of_usizes_in_a_coor =
+                        ($key::COOR_BYTES + $key::USIZE_BYTES - 1) / $key::USIZE_BYTES;
                     for &a in x.0.iter().take(amt_of_usizes_in_a_coor).rev() {
-                            result = result.wrapping_shl($key::USIZE_BITS.try_into().unwrap());
-                            let a: $coor = a.try_into().unwrap();
-                            result |= a;
+                        result = result.wrapping_shl($key::USIZE_BITS.try_into().unwrap());
+                        let a: $coor = a.try_into().unwrap();
+                        result |= a;
                     }
                     Ok(result)
                 }
@@ -456,7 +457,7 @@ macro_rules! create_lineariseable_data_type {
                 result
             }
         }
-    }
+    };
 }
 
 #[cfg(test)]
@@ -465,17 +466,20 @@ mod tests {
     const TOTAL_BITS_USED: usize = 10;
     #[cfg(not(debug_assertions))]
     const TOTAL_BITS_USED: usize = 19;
-    
+
     macro_rules! check_vals {
         ($coor: ty, $dims: expr) => {
             create_lineariseable_data_type!($coor, $dims, Keyyy);
             type Set = [$coor; $dims];
-            
-            fn get_random_key () -> Keyyy {
+
+            fn get_random_key() -> Keyyy {
                 let mut result: Keyyy = 0usize.into();
-                result.0.iter_mut().for_each(|x| *x = rand::random::<usize>());
+                result
+                    .0
+                    .iter_mut()
+                    .for_each(|x| *x = rand::random::<usize>());
                 let remaining_bytes = ($dims * Keyyy::COOR_BYTES) % Keyyy::USIZE_BYTES;
-                let mask: usize = 1<<(remaining_bytes*8);
+                let mask: usize = 1 << (remaining_bytes * 8);
                 let mask = mask - 1;
                 result.0.iter_mut().rev().take(1).for_each(|a| (*a) &= mask);
                 result
@@ -483,92 +487,97 @@ mod tests {
 
             fn are_adjacent(x: Set, y: Set) -> bool {
                 fn abs_diff((a, b): (&$coor, &$coor)) -> $coor {
-                    if a > b { a - b } else { b - a }
+                    if a > b {
+                        a - b
+                    } else {
+                        b - a
+                    }
                 }
                 x.iter().zip(y.iter()).map(abs_diff).sum::<$coor>() == 1
             }
-            
+
             let big_limit = 1usize << TOTAL_BITS_USED;
             let beginning = get_random_key();
 
             for i in 0..big_limit {
-                
                 let a = beginning + i.into();
-                let b = beginning + (i+1).into();
-                
-                if b > beginning {break;}
-                
+                let b = beginning + (i + 1).into();
+
+                if b > beginning {
+                    break;
+                }
+
                 let a = Keyyy::from_hilbert_index(a);
                 let b = Keyyy::from_hilbert_index(b);
-                
+
                 let thing_1 = Keyyy::z_index(a);
                 let thing_2 = Keyyy::from_z_index(thing_1);
                 assert_eq!(a, thing_2);
-                
+
                 let thing_1 = Keyyy::hilbert_index(a);
                 let thing_2 = Keyyy::from_hilbert_index(thing_1);
                 assert_eq!(a, thing_2);
-                
+
                 assert!(are_adjacent(a, b));
             }
         };
     }
-    
+
     #[test]
     fn u8_17d() {
         check_vals!(u8, 17);
     }
-    
+
     #[test]
     fn u8_18d() {
         check_vals!(u8, 18);
     }
-    
+
     #[test]
     fn u8_19d() {
         check_vals!(u8, 19);
     }
-    
+
     #[test]
     fn u8_20d() {
         check_vals!(u8, 20);
     }
-    
+
     #[test]
     fn u16_9d() {
         check_vals!(u16, 9);
     }
-    
+
     #[test]
     fn u16_10d() {
         check_vals!(u16, 10);
     }
-    
+
     #[test]
     fn u16_11d() {
         check_vals!(u16, 11);
     }
-    
+
     #[test]
     fn u32_5d() {
         check_vals!(u32, 5);
     }
-    
+
     #[test]
     fn u32_6d() {
         check_vals!(u32, 6);
     }
-    
+
     #[test]
     fn u32_7d() {
         check_vals!(u32, 7);
     }
-    
+
     #[test]
     fn u64_3d() {
         check_vals!(u64, 3);
     }
-    
+
     #[test]
     fn u64_5d() {
         check_vals!(u64, 5);

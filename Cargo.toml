@@ -1,6 +1,6 @@
 [package]
 name = "lindel"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["froderick <velona@ahiru.eu>"]
 edition = "2018"
 description = "A crate for Hilbert and Morton encoding and decoding; in a word, linearising and delinearising."
