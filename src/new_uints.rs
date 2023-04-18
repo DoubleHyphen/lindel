@@ -418,7 +418,7 @@ macro_rules! create_lineariseable_data_type {
                 for single_bit_mask in (1..bits).map(|i| coor_one << i) {
                     // We go from LSB to MSB
 
-                    let current_bit_is_set = |x: $coor| x & single_bit_mask != 0u8.into();
+                    let current_bit_is_set = |x: $coor| x & single_bit_mask != 0;
 
                     let less_significant_bit_mask: $coor = single_bit_mask - coor_one;
 

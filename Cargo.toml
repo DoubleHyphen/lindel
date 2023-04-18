@@ -18,8 +18,8 @@ repository = "https://github.com/DoubleHyphen/lindel"
 all-features = true
 
 [dependencies]
-num = {version = "0.2"}
-num-traits = {version = "0.2"}
+num = "0.4"
+num-traits = "0.2"
 nalgebra = {version = "0.25", optional = true}
 
 [dev-dependencies]
