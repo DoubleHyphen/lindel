@@ -2,24 +2,24 @@
 //! Chris Hamilton, and (in the near future) of Compact Z-indices by the crate maintainer.
 
 /// Right rotation of x by b bits out of n.
-fn rotate_right(x: usize, b: u32, n: u32) -> usize {
+const fn rotate_right(x: usize, b: u32, n: u32) -> usize {
     let l = x & ((1 << b) - 1);
     let r = x >> b;
     (l << (n - b)) | r
 }
 
 /// Left rotation of x by b bits out of n.
-fn rotate_left(x: usize, b: u32, n: u32) -> usize {
+const fn rotate_left(x: usize, b: u32, n: u32) -> usize {
     rotate_right(x, n - b, n)
 }
 
 /// Binary reflected Gray code.
-fn gray_code(i: usize) -> usize {
+const fn gray_code(i: usize) -> usize {
     i ^ (i >> 1)
 }
 
 /// e(i), the entry point for the ith sub-hypercube.
-fn entry_point(i: usize) -> usize {
+const fn entry_point(i: usize) -> usize {
     if i == 0 {
         0
     } else {
@@ -28,13 +28,13 @@ fn entry_point(i: usize) -> usize {
 }
 
 /// g(i), the inter sub-hypercube direction.
-fn inter_direction(i: usize) -> u32 {
+const fn inter_direction(i: usize) -> u32 {
     // g(i) counts the trailing set bits in i
     (!i).trailing_zeros()
 }
 
 /// d(i), the intra sub-hypercube direction.
-fn intra_direction(i: usize) -> u32 {
+const fn intra_direction(i: usize) -> u32 {
     if i & 1 != 0 {
         inter_direction(i)
     } else if i > 0 {
@@ -45,7 +45,7 @@ fn intra_direction(i: usize) -> u32 {
 }
 
 /// T transformation inverse
-fn t_inverse(dims: u32, e: usize, d: u32, a: usize) -> usize {
+const fn t_inverse(dims: u32, e: usize, d: u32, a: usize) -> usize {
     rotate_left(a, d, dims) ^ e
 }
 
@@ -136,12 +136,12 @@ pub fn from_compact_hilbert_index(index: usize, bits: &[u32], point: &mut [usize
 }
 
 /// T transformation
-fn t(dims: u32, e: usize, d: u32, b: usize) -> usize {
+const fn t(dims: u32, e: usize, d: u32, b: usize) -> usize {
     rotate_right(b ^ e, d, dims)
 }
 
 /// GrayCodeInverse
-fn gray_code_inverse(mut g: usize) -> usize {
+const fn gray_code_inverse(mut g: usize) -> usize {
     let mut i = 0;
 
     while g != 0 {
@@ -199,8 +199,6 @@ pub fn compact_hilbert_index(bits: &[u32], point: &[usize]) -> usize {
     h
 }
 
-
- 
 /*fn returns_closure (xs: &[u8]) -> impl Fn(u32) -> u32 {
     let sum: u32 = xs.iter().map(|&x| x as u32).sum();
     move |a| a*sum

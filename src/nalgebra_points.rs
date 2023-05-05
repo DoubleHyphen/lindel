@@ -1,16 +1,15 @@
 //! A few traits and functions for linearising `nalgebra`'s `Point` data-types.
-//! 
+//!
 //! For people who've understood the functions in the main library, there's absolutely nothing new here. The only difference is that, rather than implementing each function in both method and function ways, each function is only implemented method-style (for the encoding) or associated-function style (for the decoding). Please refer to the examples mentioned in the [`Lineariseable`](Lineariseable) trait or the `README` file.
-use morton_encoding::{bloat_custom_checked, shrink_custom_checked, nz};
+use morton_encoding::{bloat_custom_checked, nz, shrink_custom_checked};
 use nalgebra::*;
-use std::ops::{BitAndAssign, BitOrAssign, ShlAssign};
 use num::PrimInt;
 use num_traits::Zero;
-
+use std::ops::{BitAndAssign, BitOrAssign, ShlAssign};
 
 /// Given a data type and a type-number, it yields the smallest unsigned
 /// integer that's at least `N` times larger.
-/// 
+///
 /// Implemented by brute force.
 
 pub trait IdealKey<N> {
@@ -19,101 +18,101 @@ pub trait IdealKey<N> {
 
 // UGLY WORK-AROUND, HOOOOOOOO!
 impl IdealKey<U1> for u8 {
-    type Key = u8;
+    type Key = Self;
 }
 impl IdealKey<U2> for u8 {
-    type Key = u16;
+    type Key = Self;
 }
 impl IdealKey<U3> for u8 {
-    type Key = u32;
+    type Key = Self;
 }
 impl IdealKey<U4> for u8 {
-    type Key = u32;
+    type Key = Self;
 }
 impl IdealKey<U5> for u8 {
-    type Key = u64;
+    type Key = Self;
 }
 impl IdealKey<U6> for u8 {
-    type Key = u64;
+    type Key = Self;
 }
 impl IdealKey<U7> for u8 {
-    type Key = u64;
+    type Key = Self;
 }
 impl IdealKey<U8> for u8 {
-    type Key = u64;
+    type Key = Self;
 }
 impl IdealKey<U9> for u8 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U10> for u8 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U11> for u8 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U12> for u8 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U13> for u8 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U14> for u8 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U15> for u8 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U16> for u8 {
-    type Key = u128;
+    type Key = Self;
 }
 
 impl IdealKey<U1> for u16 {
-    type Key = u16;
+    type Key = Self;
 }
 impl IdealKey<U2> for u16 {
-    type Key = u32;
+    type Key = Self;
 }
 impl IdealKey<U3> for u16 {
-    type Key = u64;
+    type Key = Self;
 }
 impl IdealKey<U4> for u16 {
-    type Key = u64;
+    type Key = Self;
 }
 impl IdealKey<U5> for u16 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U6> for u16 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U7> for u16 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U8> for u16 {
-    type Key = u128;
+    type Key = Self;
 }
 
 impl IdealKey<U1> for u32 {
-    type Key = u32;
+    type Key = Self;
 }
 impl IdealKey<U2> for u32 {
-    type Key = u64;
+    type Key = Self;
 }
 impl IdealKey<U3> for u32 {
-    type Key = u128;
+    type Key = Self;
 }
 impl IdealKey<U4> for u32 {
-    type Key = u128;
+    type Key = Self;
 }
 
 impl IdealKey<U1> for u64 {
-    type Key = u64;
+    type Key = Self;
 }
 impl IdealKey<U2> for u64 {
-    type Key = u128;
+    type Key = Self;
 }
 
 impl IdealKey<U1> for u128 {
-    type Key = u128;
+    type Key = Self;
 }
 
 use super::Lineariseable;
@@ -130,12 +129,7 @@ where
         + BitAndAssign
         + std::ops::BitXorAssign,
     <N as IdealKey<D>>::Key:
-        PrimInt 
-        + From<N> 
-        + BitOrAssign 
-        + BitAndAssign 
-        + ShlAssign<usize> 
-        + std::ops::BitXorAssign,
+        PrimInt + From<N> + BitOrAssign + BitAndAssign + ShlAssign<usize> + std::ops::BitXorAssign,
     DefaultAllocator: nalgebra::allocator::Allocator<N, D>,
 {
     /// The 'Point' analogue for the primitive types' [`z_index`](Lineariseable::z_index) method.
@@ -153,7 +147,7 @@ where
             })
             .fold(<N as IdealKey<D>>::Key::zero(), |acc, x| (acc << 1) | x)
     }
-    
+
     /// The 'Point' analogue for the primitive types' [`hilbert_index`](Lineariseable::hilbert_index) method.
     /// # Examples
     /// ```rust
@@ -162,18 +156,17 @@ where
     /// assert_eq!(pnt.hilbert_index(), 4961111386034627444566496746);
     /// ```
     fn hilbert_index(&self) -> <N as IdealKey<D>>::Key {
-    
         let inverse_gray_encoding = |mut x| -> <N as IdealKey<D>>::Key {
             let log_bits: u32 = (std::mem::size_of::<<N as IdealKey<D>>::Key>() * 8)
                 .next_power_of_two()
                 .trailing_zeros();
-            let powers_of_two = (0..log_bits).map(|i| 1<<i);
+            let powers_of_two = (0..log_bits).map(|i| 1 << i);
             for pow in powers_of_two {
                 x ^= x >> pow
             }
             x
         };
-        
+
         let bits: usize = std::mem::size_of::<N>() * 8;
         let mut min_leading_zeros =
             self.iter().fold(N::zero(), |a, &b| a | b).leading_zeros() as usize;
@@ -213,8 +206,7 @@ where
 
         inverse_gray_encoding(input.z_index())
     }
-    
-    
+
     /// The 'Point' analogue for the primitive types' [`z_index`](Lineariseable::from_z_index) method.
     /// # Examples
     /// ```rust
@@ -237,8 +229,7 @@ where
         }
         result
     }
-    
-    
+
     /// The 'Point' analogue for the primitive types' [`hilbert_index`](Lineariseable::from_hilbert_index) method.
     /// # Examples
     /// ```rust
@@ -253,11 +244,11 @@ where
         let coor_bits = std::mem::size_of::<N>() * 8;
         let dims = <D as DimName>::dim();
         let mut min_leading_zeros = input.leading_zeros() as usize;
-        
+
         let key_bits = std::mem::size_of::<<N as IdealKey<D>>::Key>() * 8;
         let useless_bits = key_bits - (dims * coor_bits);
         min_leading_zeros -= useless_bits;
-        
+
         min_leading_zeros /= dims;
         min_leading_zeros /= dims;
         min_leading_zeros *= dims;
@@ -294,7 +285,6 @@ where
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -302,7 +292,7 @@ mod tests {
     const TOTAL_BITS_USED: usize = 10;
     #[cfg(not(debug_assertions))]
     const TOTAL_BITS_USED: usize = 19;
-    
+
     macro_rules! check_vals {
         ($coor: ty, $dims: ty) => {
             type Set = Point<$coor, $dims>;
@@ -310,19 +300,23 @@ mod tests {
 
             fn are_adjacent(x: Set, y: Set) -> bool {
                 fn abs_diff((a, b): (&$coor, &$coor)) -> $coor {
-                    if a > b { a - b } else { b - a }
+                    if a > b {
+                        a - b
+                    } else {
+                        b - a
+                    }
                 }
                 x.iter().zip(y.iter()).map(abs_diff).sum::<$coor>() == 1
             }
-            
+
             let coor_bits = std::mem::size_of::<$coor>() * 8;
             let dims = <$dims as DimName>::dim();
             let useful_bits = (dims * coor_bits) as u32;
-            
+
             let big_limit = (1 as Key)
                 .checked_shl(TOTAL_BITS_USED as u32)
                 .unwrap_or(Key::MAX);
-            
+
             use rand::Rng;
             let creation = Set::from_hilbert_index;
             let mut rng = rand::thread_rng();
@@ -333,83 +327,82 @@ mod tests {
             let beginning = rng.gen_range(0..limit);
             let test_this = (0..big_limit)
                 .map(|x| x + beginning)
-                .map(|x| (creation(x), creation(x+1)));
+                .map(|x| (creation(x), creation(x + 1)));
 
             for (a, b) in test_this {
-
                 let thing_1 = a.z_index();
                 let thing_2 = Set::from_z_index(thing_1);
                 assert_eq!(a, thing_2);
-                
+
                 let thing_1 = a.hilbert_index();
                 let thing_2 = Set::from_hilbert_index(thing_1);
                 assert_eq!(a, thing_2);
-                
+
                 assert!(are_adjacent(a, b));
             }
         };
     }
-    
+
     #[test]
     fn u8_2d() {
         check_vals!(u8, U2);
     }
-    
+
     #[test]
     fn u8_3d() {
         check_vals!(u8, U3);
     }
-    
+
     #[test]
     fn u8_4d() {
         check_vals!(u8, U4);
     }
-    
+
     #[test]
     fn u8_5d() {
         check_vals!(u8, U5);
     }
-    
+
     #[test]
     fn u8_6d() {
         check_vals!(u8, U6);
     }
-    
+
     #[test]
     fn u8_7d() {
         check_vals!(u8, U7);
     }
-    
+
     #[test]
     fn u8_8d() {
         check_vals!(u8, U8);
     }
-    
+
     #[test]
     fn u16_2d() {
         check_vals!(u16, U2);
     }
-    
+
     #[test]
     fn u16_3d() {
         check_vals!(u16, U3);
     }
-    
+
     #[test]
     fn u16_4d() {
         check_vals!(u16, U4);
     }
-    
+
     #[test]
     fn u32_3d() {
         check_vals!(u32, U3);
     }
-    
+
     #[test]
     fn u32_4d() {
         check_vals!(u32, U4);
     }
-    
+
     #[test]
     fn u64_2d() {
         check_vals!(u64, U2);
